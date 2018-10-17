@@ -1,41 +1,32 @@
 import React, { Component } from "react";
+import _ from "lodash";
 
-class Pagination extends Component {
-  render() {
-    return (
-      <nav aria-label="Page navigation example">
-        <ul className="pagination">
-          <li className="page-item">
-            <a
-              onClick={() => this.props.onPageChange(1)}
-              className="page-link"
-              href="#"
-            >
-              1
+const Pagination = props => {
+  const { itemsCount, pageSize, currentPage, onPageChange } = props;
+  const pagesCount = Math.ceil(itemsCount / pageSize);
+
+  if (pagesCount === 1) return null;
+
+  const pages = _.range(1, pagesCount + 1);
+
+  return (
+    <nav aria-label="Page navigation example">
+      <ul className="pagination">
+        {pages.map(page => (
+          <li
+            key={page}
+            className={
+              currentPage === page ? "page-item active" : "page-active"
+            }
+          >
+            <a onClick={() => onPageChange(page)} className="page-link">
+              {page}
             </a>
           </li>
-          <li className="page-item">
-            <a
-              onClick={() => this.props.onPageChange(2)}
-              className="page-link"
-              href="#"
-            >
-              2
-            </a>
-          </li>
-          <li className="page-item">
-            <a
-              onClick={() => this.props.onPageChange(3)}
-              className="page-link"
-              href="#"
-            >
-              3
-            </a>
-          </li>
-        </ul>
-      </nav>
-    );
-  }
-}
+        ))}
+      </ul>
+    </nav>
+  );
+};
 
 export default Pagination;

@@ -4,13 +4,21 @@ import * as MoviesAPI from "../services/fakeMovieService";
 import HeartIcon from "./heartIcon";
 import Pagination from "./common/pagination";
 
+import { paginate } from "../utils/paginator";
+
 class Movies extends Component {
   state = {
-    movies: MoviesAPI.getMovies() || []
+    movies: MoviesAPI.getMovies() || [],
+    pageSize: 4,
+    currentPage: 1
   };
 
   renderMovies = page => {
-    return this.state.movies.map(movie => {
+    const { movies, currentPage, pageSize } = this.state;
+
+    const moviesPaginated = paginate(movies, currentPage, pageSize);
+
+    return moviesPaginated.map(movie => {
       const {
         _id,
         title,
@@ -60,7 +68,12 @@ class Movies extends Component {
           </thead>
           <tbody>{this.renderMovies()}</tbody>
         </table>
-        <Pagination onPageChange={this.handlePageChange} />
+        <Pagination
+          onPageChange={this.handlePageChange}
+          itemsCount={this.state.movies.length}
+          pageSize={this.state.pageSize}
+          currentPage={this.state.currentPage}
+        />
       </React.Fragment>
     ) : (
       <h1>There are no movies in the Database</h1>
@@ -84,6 +97,10 @@ class Movies extends Component {
     });
 
     this.setState({ movies });
+  };
+
+  handlePageChange = page => {
+    this.setState({ currentPage: page });
   };
 
   render() {
