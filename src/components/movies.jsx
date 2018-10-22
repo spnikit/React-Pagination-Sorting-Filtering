@@ -13,19 +13,23 @@ class Movies extends Component {
     movies: [],
     genres: [],
     pageSize: 4,
-    currentPage: 1
+    currentPage: 1,
+    selectedGenre: null
   };
 
   componentDidMount() {
+    const genres = [{ name: "All Genres" }, ...getGenres()];
+
     this.setState({
       movies: MoviesAPI.getMovies(),
-      genres: getGenres()
+      genres
     });
   }
 
-  renderMovies = page => {
-    const { movies, currentPage, pageSize } = this.state;
+  renderMovies = movies => {
+    const { currentPage, pageSize } = this.state;
 
+    // paginate movies
     const moviesPaginated = paginate(movies, currentPage, pageSize);
 
     return moviesPaginated.map(movie => {
@@ -61,17 +65,26 @@ class Movies extends Component {
   };
 
   renderContent = () => {
+    const { selectedGenre, movies } = this.state;
+
+    // filtering movies
+    const filteredMovies =
+      selectedGenre && selectedGenre._id
+        ? movies.filter(movie => movie.genre._id === selectedGenre._id)
+        : movies;
+
     return this.state.movies.length ? (
       <div className="row">
-        <div className="col-2">
+        <div className="col-3">
           <ListGroup
             items={this.state.genres}
             onItemSelect={this.handleGenreSelect}
+            selectedItem={this.state.selectedGenre}
           />
         </div>
         <div className="col">
           <h1 className="mg-3">
-            Showing {this.state.movies.length} movies in the Database
+            Showing {filteredMovies.length} movies in the Database
           </h1>
           <table className="table">
             <thead>
@@ -83,11 +96,11 @@ class Movies extends Component {
                 <th scope="col">#</th>
               </tr>
             </thead>
-            <tbody>{this.renderMovies()}</tbody>
+            <tbody>{this.renderMovies(filteredMovies)}</tbody>
           </table>
           <Pagination
             onPageChange={this.handlePageChange}
-            itemsCount={this.state.movies.length}
+            itemsCount={filteredMovies.length}
             pageSize={this.state.pageSize}
             currentPage={this.state.currentPage}
           />
@@ -119,6 +132,13 @@ class Movies extends Component {
 
   handlePageChange = page => {
     this.setState({ currentPage: page });
+  };
+
+  handleGenreSelect = genre => {
+    this.setState({
+      selectedGenre: genre,
+      currentPage: 1
+    });
   };
 
   render() {
