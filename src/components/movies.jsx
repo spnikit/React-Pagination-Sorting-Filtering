@@ -1,17 +1,27 @@
 import React, { Component } from "react";
 
 import * as MoviesAPI from "../services/fakeMovieService";
+import { getGenres } from "../services/fakeGenreService";
 import HeartIcon from "./heartIcon";
 import Pagination from "./common/pagination";
+import ListGroup from "./common/listGroup";
 
 import { paginate } from "../utils/paginator";
 
 class Movies extends Component {
   state = {
-    movies: MoviesAPI.getMovies() || [],
+    movies: [],
+    genres: [],
     pageSize: 4,
     currentPage: 1
   };
+
+  componentDidMount() {
+    this.setState({
+      movies: MoviesAPI.getMovies(),
+      genres: getGenres()
+    });
+  }
 
   renderMovies = page => {
     const { movies, currentPage, pageSize } = this.state;
@@ -52,29 +62,37 @@ class Movies extends Component {
 
   renderContent = () => {
     return this.state.movies.length ? (
-      <React.Fragment>
-        <h1 className="mg-3">
-          Showing {this.state.movies.length} movies in the Database
-        </h1>
-        <table className="table">
-          <thead>
-            <tr>
-              <th scope="col">Title</th>
-              <th scope="col">Genre</th>
-              <th scope="col">Stock</th>
-              <th scope="col">Rate</th>
-              <th scope="col">#</th>
-            </tr>
-          </thead>
-          <tbody>{this.renderMovies()}</tbody>
-        </table>
-        <Pagination
-          onPageChange={this.handlePageChange}
-          itemsCount={this.state.movies.length}
-          pageSize={this.state.pageSize}
-          currentPage={this.state.currentPage}
-        />
-      </React.Fragment>
+      <div className="row">
+        <div className="col-2">
+          <ListGroup
+            items={this.state.genres}
+            onItemSelect={this.handleGenreSelect}
+          />
+        </div>
+        <div className="col">
+          <h1 className="mg-3">
+            Showing {this.state.movies.length} movies in the Database
+          </h1>
+          <table className="table">
+            <thead>
+              <tr>
+                <th scope="col">Title</th>
+                <th scope="col">Genre</th>
+                <th scope="col">Stock</th>
+                <th scope="col">Rate</th>
+                <th scope="col">#</th>
+              </tr>
+            </thead>
+            <tbody>{this.renderMovies()}</tbody>
+          </table>
+          <Pagination
+            onPageChange={this.handlePageChange}
+            itemsCount={this.state.movies.length}
+            pageSize={this.state.pageSize}
+            currentPage={this.state.currentPage}
+          />
+        </div>
+      </div>
     ) : (
       <h1>There are no movies in the Database</h1>
     );
