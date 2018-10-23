@@ -13,7 +13,7 @@ const ListGroup = ({
         <li
           style={{ cursor: "pointer" }}
           onClick={() => onItemSelect(item)}
-          key={item[valueProperty] || Math.random()}
+          key={item[valueProperty]}
           className={
             selectedItem === item ? "list-group-item active" : "list-group-item"
           }

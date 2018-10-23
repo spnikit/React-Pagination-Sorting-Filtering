@@ -2,11 +2,11 @@ import React, { Component } from "react";
 
 import * as MoviesAPI from "../services/fakeMovieService";
 import { getGenres } from "../services/fakeGenreService";
-import HeartIcon from "./heartIcon";
 import Pagination from "./common/pagination";
 import ListGroup from "./common/listGroup";
-
+import MoviesTable from "./moviesTable";
 import { paginate } from "../utils/paginator";
+import _ from "lodash";
 
 class Movies extends Component {
   state = {
@@ -14,58 +14,32 @@ class Movies extends Component {
     genres: [],
     pageSize: 4,
     currentPage: 1,
-    selectedGenre: null
+    selectedGenre: null,
+    sortColumn: { path: "title", order: "asc" }
   };
 
   componentDidMount() {
-    const genres = [{ name: "All Genres" }, ...getGenres()];
+    const genres = [{ _id: "", name: "All Genres" }, ...getGenres()];
 
     this.setState({
       movies: MoviesAPI.getMovies(),
-      genres
+      genres,
+      selectedGenre: genres[0]
     });
   }
 
-  renderMovies = movies => {
-    const { currentPage, pageSize } = this.state;
-
-    // paginate movies
-    const moviesPaginated = paginate(movies, currentPage, pageSize);
-
-    return moviesPaginated.map(movie => {
-      const {
-        _id,
-        title,
-        genre: { name },
-        numberInStock,
-        dailyRentalRate,
-        liked
-      } = movie;
-
-      return (
-        <tr key={_id}>
-          <td>{title}</td>
-          <td>{name}</td>
-          <td>{numberInStock}</td>
-          <td>{dailyRentalRate}</td>
-          <td>
-            <HeartIcon liked={liked} onLike={() => this.handleLike(movie)} />
-          </td>
-          <td>
-            <button
-              className="btn btn-danger"
-              onClick={() => this.handleDelete(_id)}
-            >
-              Delete
-            </button>
-          </td>
-        </tr>
-      );
-    });
-  };
-
   renderContent = () => {
-    const { selectedGenre, movies } = this.state;
+    const {
+      selectedGenre,
+      movies,
+      currentPage,
+      pageSize,
+      sortColumn
+    } = this.state;
+
+    if (movies.length === 0) {
+      return <h1>There are no movies in the Database</h1>;
+    }
 
     // filtering movies
     const filteredMovies =
@@ -73,7 +47,15 @@ class Movies extends Component {
         ? movies.filter(movie => movie.genre._id === selectedGenre._id)
         : movies;
 
-    return this.state.movies.length ? (
+    const sortedMovies = _.orderBy(
+      filteredMovies,
+      [sortColumn.path],
+      [sortColumn.order]
+    );
+
+    const moviesPaginated = paginate(sortedMovies, currentPage, pageSize);
+
+    return (
       <div className="row">
         <div className="col-3">
           <ListGroup
@@ -86,18 +68,13 @@ class Movies extends Component {
           <h1 className="mg-3">
             Showing {filteredMovies.length} movies in the Database
           </h1>
-          <table className="table">
-            <thead>
-              <tr>
-                <th scope="col">Title</th>
-                <th scope="col">Genre</th>
-                <th scope="col">Stock</th>
-                <th scope="col">Rate</th>
-                <th scope="col">#</th>
-              </tr>
-            </thead>
-            <tbody>{this.renderMovies(filteredMovies)}</tbody>
-          </table>
+          <MoviesTable
+            movies={moviesPaginated}
+            onLike={this.handleLike}
+            onDelete={this.handleDelete}
+            onSort={this.handleSort}
+            sortColumn={sortColumn}
+          />
           <Pagination
             onPageChange={this.handlePageChange}
             itemsCount={filteredMovies.length}
@@ -106,8 +83,6 @@ class Movies extends Component {
           />
         </div>
       </div>
-    ) : (
-      <h1>There are no movies in the Database</h1>
     );
   };
 
@@ -139,6 +114,10 @@ class Movies extends Component {
       selectedGenre: genre,
       currentPage: 1
     });
+  };
+
+  handleSort = sortColumn => {
+    this.setState({ sortColumn });
   };
 
   render() {
